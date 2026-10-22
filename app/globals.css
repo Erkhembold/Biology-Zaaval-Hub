@@ -1,26 +1,28 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --green: #16a34a;
+  --orange: #ea580c;
+  --bg: #f8fafc;
+  --ink: #0f172a;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
+
+.scene { perspective: 1200px; }
+.tilt {
+  transform: rotateY(-14deg) rotateX(8deg);
+  transition: transform 0.4s ease;
+  transform-style: preserve-3d;
+}
+.tilt:hover { transform: rotateY(-4deg) rotateX(2deg); }
+
+.flip { perspective: 600px; }
+.flip-inner { transform-style: preserve-3d; transition: transform 0.45s; position: relative; width: 100%; height: 100%; }
+.flip-inner.is-flipped { transform: rotateY(180deg); }
+.flip-face { backface-visibility: hidden; position: absolute; inset: 0; }
+.flip-back { transform: rotateY(180deg); }

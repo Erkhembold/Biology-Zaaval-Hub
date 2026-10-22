@@ -142,6 +142,7 @@ export default function QuizPage({ params }: { params: Promise<{ id: string }> }
           <div className="flex items-center justify-between">
             <span className={`font-semibold ${isCorrect ? "text-green-700" : "text-red-600"}`}>
               {isCorrect ? (profile ? "Correct! +5 XP" : "Correct!") : `Not quite. Answer: ${q!.answer}`}
+              {q!.explanation && <span className="mt-1 block text-sm font-normal text-slate-600">{q!.explanation}</span>}
             </span>
             <button onClick={next} className="rounded-full bg-green-600 px-5 py-2 font-semibold text-white">
               {i + 1 >= quiz.questions.length ? "Finish" : "Next"}

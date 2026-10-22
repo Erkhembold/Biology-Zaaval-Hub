@@ -9,6 +9,7 @@ export default function LoginPage() {
   const { profile } = useProfile();
   const [mode, setMode] = useState<"in" | "up">("in");
   const [name, setName] = useState("");
+  const [grade, setGrade] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [msg, setMsg] = useState("");
@@ -22,7 +23,11 @@ export default function LoginPage() {
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        options: { data: { full_name: name } },
+        options: {
+          data: { full_name: name, grade },
+          // The confirmation link lands on this site (not localhost) and signs the user in
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
       });
       if (error) setMsg(error.message);
       else if (!data.session) setMsg("Account created. Check your email to confirm, then sign in.");
@@ -52,13 +57,39 @@ export default function LoginPage() {
       <form onSubmit={submit} className="space-y-4 rounded-2xl bg-white p-8 shadow">
         <h1 className="text-2xl font-bold text-green-700">{mode === "in" ? "Sign in" : "Create account"}</h1>
         {mode === "up" && (
-          <input
-            required
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Full name"
-            className="w-full rounded-lg border border-slate-300 px-3 py-2"
-          />
+          <>
+            <input
+              required
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Full name"
+              className="w-full rounded-lg border border-slate-300 px-3 py-2"
+            />
+            <fieldset>
+              <legend className="mb-1 text-sm font-medium text-slate-700">Your class</legend>
+              <div className="grid grid-cols-4 gap-2">
+                {["A", "B", "C", "D"].map((l) => (
+                  <label
+                    key={l}
+                    className={`cursor-pointer rounded-lg border-2 py-2 text-center font-semibold ${
+                      grade === `11${l}` ? "border-green-600 bg-green-50 text-green-700" : "border-slate-200 hover:border-green-400"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="grade"
+                      required
+                      value={`11${l}`}
+                      checked={grade === `11${l}`}
+                      onChange={() => setGrade(`11${l}`)}
+                      className="sr-only"
+                    />
+                    11{l}
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+          </>
         )}
         <input
           required

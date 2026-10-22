@@ -1,52 +1,86 @@
 "use client";
-import { useState } from "react";
-import { supabase, type Question, type Quiz } from "@/lib/supabase";
+import { useEffect, useState } from "react";
+import { supabase, type Quiz } from "@/lib/supabase";
 import { awardXp, useProfile } from "@/lib/useProfile";
 
+type Item =
+  | { kind: "mc"; question: string; options: string[]; answer: string }
+  | { kind: "typed"; question: string; answer: string; accepted: string[]; time: number };
+
 type Phase = "idle" | "playing" | "done";
+type Reveal = { correct: boolean; botCorrect: boolean; shown: string };
+
+const norm = (s: string) =>
+  s.toLowerCase().replace(/[–—]/g, "-").replace(/°c?/g, "").replace(/[^a-z0-9 -]/g, "").replace(/\s+/g, " ").trim();
 
 export default function Duel() {
   const { profile, refresh } = useProfile();
   const [phase, setPhase] = useState<Phase>("idle");
-  const [qs, setQs] = useState<Question[]>([]);
+  const [items, setItems] = useState<Item[]>([]);
   const [i, setI] = useState(0);
   const [me, setMe] = useState(0);
   const [bot, setBot] = useState(0);
-  const [reveal, setReveal] = useState<{ pick: string; botPick: string } | null>(null);
+  const [reveal, setReveal] = useState<Reveal | null>(null);
+  const [typed, setTyped] = useState("");
+  const [time, setTime] = useState(0);
+
+  const item = items[i];
 
   async function start() {
     const { data } = await supabase.from("quizzes").select("*");
-    const all = ((data as Quiz[]) ?? []).flatMap((q) => q.questions);
-    const picked = all.sort(() => Math.random() - 0.5).slice(0, 5);
-    setQs(picked);
+    const quizzes = (data as Quiz[]) ?? [];
+    const pool: Item[] = quizzes.flatMap((q) => [
+      ...(q.duel_questions ?? []).map((d) => ({ kind: "typed" as const, ...d })),
+      ...q.questions.map((m) => ({ kind: "mc" as const, question: m.question, options: m.options, answer: m.answer })),
+    ]);
+    setItems(pool.sort(() => Math.random() - 0.5).slice(0, 5));
     setI(0);
     setMe(0);
     setBot(0);
     setReveal(null);
+    setTyped("");
     setPhase("playing");
   }
 
-  async function answer(opt: string) {
-    if (reveal) return;
-    const q = qs[i];
-    // Simulated opponent: answers correctly ~60% of the time
-    const botCorrect = Math.random() < 0.6;
-    const wrongs = q.options.filter((o) => o !== q.answer);
-    const botPick = botCorrect ? q.answer : wrongs[Math.floor(Math.random() * wrongs.length)];
-    setReveal({ pick: opt, botPick });
-    if (opt === q.answer) {
+  async function submit(given: string) {
+    if (reveal || !item) return;
+    const correct =
+      item.kind === "mc"
+        ? given === item.answer
+        : [item.answer, ...item.accepted].map(norm).includes(norm(given));
+    const botCorrect = Math.random() < 0.6; // simulated opponent
+    setReveal({ correct, botCorrect, shown: given });
+    if (correct) {
       setMe((m) => m + 1);
       if (profile) {
         await awardXp(1); // +5 XP per correct answer
         refresh();
       }
     }
-    if (botPick === q.answer) setBot((b) => b + 1);
+    if (botCorrect) setBot((b) => b + 1);
   }
+
+  // countdown for typed questions
+  useEffect(() => {
+    if (phase !== "playing" || !item || item.kind !== "typed" || reveal) return;
+    setTime(item.time);
+  }, [phase, item, reveal]);
+
+  useEffect(() => {
+    if (phase !== "playing" || !item || item.kind !== "typed" || reveal) return;
+    if (time <= 0) {
+      submit(typed);
+      return;
+    }
+    const t = setTimeout(() => setTime((x) => x - 1), 1000);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [time, phase, item, reveal]);
 
   function next() {
     setReveal(null);
-    if (i + 1 >= qs.length) setPhase("done");
+    setTyped("");
+    if (i + 1 >= items.length) setPhase("done");
     else setI(i + 1);
   }
 
@@ -72,37 +106,68 @@ export default function Duel() {
     );
   }
 
-  const q = qs[i];
   return (
     <div>
       <div className="mb-3 flex justify-between text-sm font-semibold">
         <span className="text-green-700">You: {me}</span>
-        <span>Round {i + 1}/{qs.length}</span>
+        <span>Round {i + 1}/{items.length}</span>
         <span className="text-orange-600">Opponent: {bot}</span>
       </div>
-      <p className="mb-3 text-lg font-semibold">{q.question}</p>
-      <div className="grid gap-2">
-        {q.options.map((o) => {
-          const show = !!reveal;
-          const good = show && o === q.answer;
-          const bad = show && reveal!.pick === o && o !== q.answer;
-          return (
-            <button
-              key={o}
-              disabled={show}
-              onClick={() => answer(o)}
-              className={`rounded-lg border-2 p-2 text-left ${good ? "border-green-600 bg-green-50" : bad ? "border-red-500 bg-red-50" : "border-slate-200 hover:border-green-400"}`}
-            >
-              {o}
-              {show && reveal!.botPick === o && <span className="ml-2 text-xs text-orange-600">(opponent)</span>}
-            </button>
-          );
-        })}
-      </div>
+      <p className="mb-3 text-lg font-semibold">{item.question}</p>
+
+      {item.kind === "mc" ? (
+        <div className="grid gap-2">
+          {item.options.map((o) => {
+            const good = !!reveal && o === item.answer;
+            const bad = !!reveal && reveal.shown === o && o !== item.answer;
+            return (
+              <button
+                key={o}
+                disabled={!!reveal}
+                onClick={() => submit(o)}
+                className={`rounded-lg border-2 p-2 text-left ${good ? "border-green-600 bg-green-50" : bad ? "border-red-500 bg-red-50" : "border-slate-200 hover:border-green-400"}`}
+              >
+                {o}
+              </button>
+            );
+          })}
+        </div>
+      ) : (
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            submit(typed);
+          }}
+          className="space-y-2"
+        >
+          {!reveal && <p className="text-sm font-bold text-orange-600">⏱ {time}s</p>}
+          <input
+            autoFocus
+            disabled={!!reveal}
+            value={typed}
+            onChange={(e) => setTyped(e.target.value)}
+            placeholder="Type your answer"
+            className="w-full rounded-lg border-2 border-slate-200 px-3 py-2"
+          />
+          {!reveal && (
+            <button className="rounded-full bg-orange-600 px-5 py-2 font-semibold text-white">Submit</button>
+          )}
+          {reveal && <p className="text-sm text-slate-600">Answer: <b>{item.answer}</b></p>}
+        </form>
+      )}
+
       {reveal && (
-        <button onClick={next} className="mt-3 rounded-full bg-green-600 px-5 py-2 font-semibold text-white">
-          {i + 1 >= qs.length ? "Finish" : "Next round"}
-        </button>
+        <div className="mt-3">
+          <p className={`font-semibold ${reveal.correct ? "text-green-700" : "text-red-600"}`}>
+            {reveal.correct ? (profile ? "Correct! +5 XP" : "Correct!") : "Not quite."}{" "}
+            <span className="text-sm font-normal text-orange-600">
+              Opponent {reveal.botCorrect ? "got it right" : "missed"}
+            </span>
+          </p>
+          <button onClick={next} className="mt-2 rounded-full bg-green-600 px-5 py-2 font-semibold text-white">
+            {i + 1 >= items.length ? "Finish" : "Next round"}
+          </button>
+        </div>
       )}
     </div>
   );

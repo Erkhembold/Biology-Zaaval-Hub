@@ -1,18 +1,17 @@
+import Image from "next/image";
 import Link from "next/link";
 import VideoEmbed from "@/components/VideoEmbed";
 
 function Textbook() {
   return (
-    <svg viewBox="0 0 220 260" className="h-64 w-56 drop-shadow-2xl" aria-label="Biology textbook">
-      <rect x="20" y="20" width="170" height="220" rx="10" fill="#15803d" />
-      <rect x="30" y="20" width="160" height="220" rx="8" fill="#16a34a" />
-      <rect x="20" y="20" width="14" height="220" rx="4" fill="#166534" />
-      <circle cx="110" cy="95" r="34" fill="#fff" opacity=".95" />
-      <path d="M110 70c-12 10-12 40 0 50 12-10 12-40 0-50z" fill="#ea580c" />
-      <path d="M90 95h40" stroke="#16a34a" strokeWidth="4" strokeLinecap="round" />
-      <text x="110" y="170" textAnchor="middle" fontSize="18" fontWeight="700" fill="#fff">BIOLOGY</text>
-      <text x="110" y="194" textAnchor="middle" fontSize="14" fill="#fed7aa">11 Zaaval</text>
-    </svg>
+    <Image
+      src="/images/biology-book.png"
+      alt="Биологи XI textbook cover"
+      width={199}
+      height={301}
+      priority
+      className="h-80 w-auto rounded-md shadow-2xl ring-1 ring-black/10"
+    />
   );
 }
 

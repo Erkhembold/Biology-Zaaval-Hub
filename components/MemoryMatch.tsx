@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const PAIRS: [string, string][] = [
   ["Substrate", "Active Site"],
@@ -30,56 +30,91 @@ export default function MemoryMatch() {
   const [cards, setCards] = useState<Card[]>([]);
   const [flipped, setFlipped] = useState<number[]>([]);
   const [matched, setMatched] = useState<number[]>([]);
+  const [moves, setMoves] = useState(0);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => setCards(build()), []);
+  useEffect(() => {
+    setCards(build());
+    return () => {
+      if (timer.current) clearTimeout(timer.current);
+    };
+  }, []);
 
   function flip(c: Card) {
     if (flipped.length === 2 || flipped.includes(c.id) || matched.includes(c.pair)) return;
     const next = [...flipped, c.id];
     setFlipped(next);
     if (next.length === 2) {
+      setMoves((m) => m + 1);
       const [a, b] = next.map((id) => cards.find((x) => x.id === id)!);
       if (a.pair === b.pair) {
-        setMatched((m) => [...m, a.pair]);
-        setFlipped([]);
+        timer.current = setTimeout(() => {
+          setMatched((m) => [...m, a.pair]);
+          setFlipped([]);
+        }, 350);
       } else {
-        setTimeout(() => setFlipped([]), 800);
+        timer.current = setTimeout(() => setFlipped([]), 900);
       }
     }
   }
 
   function reset() {
+    if (timer.current) clearTimeout(timer.current);
     setCards(build());
     setFlipped([]);
     setMatched([]);
+    setMoves(0);
   }
 
   return (
     <div>
-      <div className="mb-4 flex items-center justify-between">
-        <span className="text-lg font-bold text-orange-600">{matched.length}/8 matches found</span>
+      <div className="mb-4 flex items-center justify-between gap-2">
+        <span className="text-base font-bold text-orange-600 sm:text-lg">{matched.length}/8 matches found</span>
+        <span className="whitespace-nowrap text-sm text-slate-500">Moves: {moves}</span>
         <button onClick={reset} className="rounded-full border border-slate-300 px-3 py-1 text-sm hover:bg-slate-100">Restart</button>
       </div>
-      <div className="grid grid-cols-4 gap-2">
+
+      <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
         {cards.map((c) => {
-          const up = flipped.includes(c.id) || matched.includes(c.pair);
+          const isMatched = matched.includes(c.pair);
+          const up = flipped.includes(c.id) || isMatched;
           return (
-            <button key={c.id} onClick={() => flip(c)} className="flip h-20 sm:h-24" aria-label="card">
+            <div
+              key={c.id}
+              role="button"
+              tabIndex={0}
+              aria-label={up ? c.label : "Hidden card"}
+              aria-pressed={up}
+              onClick={() => flip(c)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  flip(c);
+                }
+              }}
+              className="flip mm-card h-[4.5rem] cursor-pointer select-none sm:h-24"
+            >
               <div className={`flip-inner ${up ? "is-flipped" : ""}`}>
                 <div className="flip-face flex items-center justify-center rounded-xl bg-green-600 text-2xl text-white">?</div>
                 <div
-                  className={`flip-face flip-back flex items-center justify-center rounded-xl p-1 text-center text-xs font-semibold sm:text-sm ${
-                    matched.includes(c.pair) ? "bg-green-100 text-green-800" : "bg-orange-100 text-orange-800"
-                  }`}
+                  className={`flip-face flip-back flex items-center justify-center overflow-hidden rounded-xl px-0.5 text-center font-semibold leading-tight [overflow-wrap:anywhere] ${
+                    c.label.length > 10 ? "text-[9px] sm:text-xs" : c.label.length > 7 ? "text-[10px] sm:text-sm" : "text-[11px] sm:text-sm"
+                  } ${isMatched ? "bg-green-100 text-green-800 ring-2 ring-green-500" : "bg-orange-100 text-orange-800"}`}
                 >
                   {c.label}
                 </div>
               </div>
-            </button>
+            </div>
           );
         })}
       </div>
-      {matched.length === 8 && <p className="mt-4 font-semibold text-green-700">You found all the pairs!</p>}
+
+      {matched.length === 8 && (
+        <div className="mt-4 rounded-xl bg-green-50 p-4 text-center">
+          <p className="font-bold text-green-700">You found all the pairs in {moves} moves!</p>
+          <button onClick={reset} className="mt-2 rounded-full bg-orange-600 px-5 py-2 text-sm font-semibold text-white">Play again</button>
+        </div>
+      )}
     </div>
   );
 }

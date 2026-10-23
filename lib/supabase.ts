@@ -29,4 +29,27 @@ export type Quiz = {
   flashcards: Flashcard[] | null;
   created_at: string;
 };
-export type Profile = { id: string; full_name: string; grade: string; xp_points: number };
+export type Profile = {
+  id: string;
+  full_name: string;
+  grade: string;
+  xp_points: number;
+  avatar_path?: string | null;
+};
+export type DuelPublicQuestion = { kind: "mc" | "typed"; question: string; options?: string[]; time?: number };
+export type Duel = {
+  id: string;
+  pin: string;
+  host_id: string;
+  guest_id: string | null;
+  host_name: string | null;
+  guest_name: string | null;
+  status: "waiting" | "ready" | "playing" | "completed";
+  questions: DuelPublicQuestion[];
+  host_score: number;
+  guest_score: number;
+  host_progress: number;
+  guest_progress: number;
+  created_at: string;
+};
+export type QuizAttempt = { id: string; quiz_id: string; correct: number; total: number; created_at: string };

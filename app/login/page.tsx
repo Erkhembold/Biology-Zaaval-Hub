@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { useProfile } from "@/lib/useProfile";
@@ -14,6 +14,10 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (profile) router.replace("/profile");
+  }, [profile, router]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -40,17 +44,7 @@ export default function LoginPage() {
     setBusy(false);
   }
 
-  if (profile) {
-    return (
-      <section className="mx-auto max-w-md px-4 py-16">
-        <div className="rounded-2xl bg-white p-8 shadow">
-          <h1 className="text-2xl font-bold text-green-700">{profile.full_name}</h1>
-          <p className="mt-2 text-slate-600">Grade {profile.grade}</p>
-          <p className="mt-4 text-4xl font-extrabold text-orange-600">{profile.xp_points} XP</p>
-        </div>
-      </section>
-    );
-  }
+  if (profile) return <p className="p-10 text-center text-slate-500">Opening your profile...</p>;
 
   return (
     <section className="mx-auto max-w-md px-4 py-16">

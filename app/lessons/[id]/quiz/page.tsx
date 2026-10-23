@@ -51,7 +51,12 @@ export default function QuizPage({ params }: { params: Promise<{ id: string }> }
 
   function next() {
     if (!quiz) return;
-    if (i + 1 >= quiz.questions.length) return setDone(true);
+    if (i + 1 >= quiz.questions.length) {
+      if (profile) {
+        supabase.from("quiz_attempts").insert({ user_id: profile.id, quiz_id: quiz.id, correct: score, total: quiz.questions.length }).then(() => {});
+      }
+      return setDone(true);
+    }
     setI(i + 1);
     setPicked(null);
     setConfirmed(false);

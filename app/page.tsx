@@ -22,8 +22,7 @@ export default function Home() {
         <div>
           <h1 className="text-5xl font-extrabold tracking-tight text-green-700">11 Biology Zaaval</h1>
           <p className="mt-3 text-xl font-medium text-orange-600">Udirdsan bagsh: Ariunzul</p>
-          <h2 className="mt-8 text-2xl font-bold">Biology gej yu ve?</h2>
-          <p className="mt-3 text-slate-700">
+          <p className="mt-8 text-slate-700">
             This hub is designed for 11th-grade students to review the biology topics covered in class. Each lesson topic
             has a short review and a quiz so you can see what you remember and what needs another look.
           </p>
@@ -67,9 +66,13 @@ export default function Home() {
 
       <section className="py-8">
         <div className="flex flex-col items-center gap-6 rounded-2xl bg-white p-6 shadow sm:flex-row">
-          <div className="flex h-28 w-28 shrink-0 items-center justify-center rounded-full border-2 border-dashed border-orange-400 bg-orange-50 text-xs text-orange-600">
-            my image here
-          </div>
+          <Image
+            src="/images/developer.jpg"
+            alt="N.Erkhembold (ebo)"
+            width={112}
+            height={112}
+            className="h-28 w-28 shrink-0 rounded-full object-cover object-top ring-4 ring-green-100"
+          />
           <div>
             <h3 className="text-lg font-bold text-green-700">Web Developed by: N.Erkhembold(ebo), 11b</h3>
             <p className="mt-2 text-slate-700">

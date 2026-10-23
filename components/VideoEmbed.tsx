@@ -5,7 +5,7 @@ import { useState } from "react";
 export default function VideoEmbed({ id }: { id: string }) {
   const [playing, setPlaying] = useState(false);
   return (
-    <div className="relative aspect-video w-full overflow-hidden rounded-2xl bg-black shadow-lg">
+    <div className={`relative w-full overflow-hidden rounded-2xl bg-black shadow-lg ${playing ? "aspect-video" : "aspect-[1920/842]"}`}>
       {playing ? (
         <iframe
           className="absolute inset-0 h-full w-full"

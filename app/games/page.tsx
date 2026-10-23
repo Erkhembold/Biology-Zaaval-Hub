@@ -1,4 +1,5 @@
 import Duel from "@/components/Duel";
+import DuelRoom from "@/components/DuelRoom";
 import MemoryMatch from "@/components/MemoryMatch";
 
 export default function GamesPage() {
@@ -8,7 +9,11 @@ export default function GamesPage() {
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
         <div className="rounded-2xl bg-white p-6 shadow">
           <h2 className="mb-4 text-2xl font-bold">1v1 a friend</h2>
-          <Duel />
+          <DuelRoom />
+          <details className="mt-6 border-t border-slate-100 pt-4">
+            <summary className="cursor-pointer text-sm font-semibold text-slate-600">No friend online? Practice vs the computer</summary>
+            <div className="mt-4"><Duel /></div>
+          </details>
         </div>
         <div className="rounded-2xl bg-white p-6 shadow">
           <h2 className="mb-1 text-2xl font-bold">Memory Match</h2>

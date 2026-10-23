@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import Avatar from "@/components/Avatar";
 import { supabase, type Profile } from "@/lib/supabase";
 
 function weekEnd() {
@@ -62,9 +63,7 @@ export default function LeaderboardPage() {
               <tr key={p.id} className="border-t border-slate-100">
                 <td className="p-3 font-bold">{i < 3 ? ["🥇", "🥈", "🥉"][i] : i + 1}</td>
                 <td className="flex items-center gap-2 p-3">
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-100 font-bold text-orange-700">
-                    {p.full_name.charAt(0).toUpperCase()}
-                  </span>
+                  <Avatar path={p.avatar_path} name={p.full_name} size={32} />
                   {p.full_name}
                 </td>
                 <td className="p-3">{p.grade}</td>
